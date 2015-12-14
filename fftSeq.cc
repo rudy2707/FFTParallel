@@ -6,17 +6,47 @@
 #include <bitset>
 #include <cstdlib>
 #include <ctime>
+#include <cmath>
 
 using namespace std;
 const double pi      = 3.14159265358979323846264;
 
 // On réordonne les éléments de data en renversant
 // l'ordre des bits des indices 
-void bitInv(vector<complex<double> >& data) { /*à compléter*/ }
+void bitInv(vector<complex<double> >& data) {
+    complex<double> tmp;
+    int resI;
+    int size = log2(data.size());
+    // Parsing only the half array 
+    for (int i = 1; i < data.size()/2; i++) {
+        resI = 0;
+        for (int j = 0; j < size; j++) {
+            if (i & (0x1 << j)) {
+               resI |= 0x1 << (size - 1 - j); 
+            }
+        }
+        tmp = data[i];
+        data[i] = data[resI];
+        data[resI] = tmp;
+    }
+}
 
 // Une etape de la FFT sequentielle
 void stepSeq(vector<complex<double> >& data,
-             complex<double>& w,int d) { /*à compléter*/ }
+             complex<double>& w,int d) { 
+    complex<double> wk, impair;
+    for (int k = 0; k < data.size(); k++) {
+        if (k % (2*d) == 0)
+            wk = 1;
+        if ((k >> (int)log2(d)) == 0) {
+            impair = wk * data[k + d];
+            data[k + d] = data[k] - impair;
+            data[k] = data[k] + impair;
+            wk = w * wk;
+        }
+    }
+    w = sqrt(w);
+}
 
 // FFT séquentielle
 void fft(vector<complex<double> >& data) {
@@ -46,5 +76,7 @@ int main(int argc,char ** argv) {
    randInit(data,0.0,100.0);
    print(data);
    fft(data);
+   cout << "After FFT" << endl;
    print(data);
+   cout << "Done" << endl;
 }

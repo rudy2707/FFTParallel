@@ -28,7 +28,7 @@
 *.app
 
 # GVIM Swap Files
-*.swq
+*.swp
 
 # Executable files
 fftSeq
