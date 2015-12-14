@@ -38,7 +38,7 @@ void stepSeq(vector<complex<double> >& data,
     for (int k = 0; k < data.size(); k++) {
         if (k % (2*d) == 0)
             wk = 1;
-        if ((k >> (int)log2(d)) == 0) {
+        if ((k & (0x1 << (int)log2(d))) == 0) {
             impair = wk * data[k + d];
             data[k + d] = data[k] - impair;
             data[k] = data[k] + impair;
