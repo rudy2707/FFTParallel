@@ -26,3 +26,11 @@
 *.exe
 *.out
 *.app
+
+# GVIM Swap Files
+*.swq
+
+# Executable files
+fftSeq
+fftPar1D
+fftParallel

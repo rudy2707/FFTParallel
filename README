@@ -1,0 +1,8 @@
+To run the seq algo:
+    make seq
+
+To run the 1 Dimension parallel algo:
+    make one
+
+To run the Parallel algo:
+    make run
