@@ -17,6 +17,7 @@ void bitInv(vector<complex<double> >& data) {
     complex<double> tmp;
     int resI;
     int size = log2(data.size());
+    
     // Parsing only the half array 
     for (int i = 1; i < data.size()/2; i++) {
         resI = 0;

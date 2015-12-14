@@ -8,12 +8,96 @@
 #include <cstdlib>
 #include <ctime>
 #include <cstring>
+#include <cmath>
 #include <mpi.h>
 
 using namespace std;
 
+// Une etape de la FFT sequentielle
+void stepSeq(vector<complex<double> >& data,
+             complex<double>& w,int d) { 
+    complex<double> wk, impair;
+    for (int k = 0; k < data.size(); k++) {
+        if (k % (2*d) == 0)
+            wk = 1;
+        if ((k & (0x1 << (int)log2(d))) == 0) {
+            impair = wk * data[k + d];
+            data[k + d] = data[k] - impair;
+            data[k] = data[k] + impair;
+            wk = w * wk;
+        }
+    }
+    w = sqrt(w);
+}
+
+void bitReversedPar(vector<complex<double>>& data) {
+    // TODO
+}
+
+void swapPar(complex<double> loc, int proc) {
+    // TODO 
+}
+
+// Une etape de la FFT parallele
+void stepPar(vector<complex<double> >& data, complex<double>& w, int d) {
+    int nbPE,myPE;
+    MPI_Comm_size(MPI_COMM_WORLD,&nbPE);
+    MPI_Comm_rank(MPI_COMM_WORLD,&myPE);
+
+    int nloc = nbPE / data.size();
+    int wk = 1;
+    
+    for (int i = 1; i < ((myPE * nloc) % size); i++) {
+        wk = w*wk;
+    }
+
+    int indGlobal;
+    complex<double> oldElement;
+    for (int k = 0; k < nloc-1; k++) {
+        indGlobal = k + myPE * nloc;    // Indice global dans la partie paire
+
+        if ((indGlobal & (0x1 << (int)log2(size))) == 0) {
+            oldElement = data[k];
+            swapPar(data[k], myPE ^ (size/nloc));
+            data[k] = data[k] + oldElement;
+        }
+        else {
+            data[k] = wk * data[k];
+            oldElement = data[k];
+            swapPar(data[k], myPE ^ (size/nloc));
+            data[k] = data[k] - oldElement;
+        }
+
+        wk *= w;
+    }
+
+    w = sqrt(w);
+}
+
 // FFT parallèle 1D
-void fftPar(vector<complex<double> >& data) { /*à compléter*/}
+void fftPar(vector<complex<double> >& data) { 
+    int nbPE,myPE;
+    MPI_Comm_size(MPI_COMM_WORLD,&nbPE);
+    MPI_Comm_rank(MPI_COMM_WORLD,&myPE);
+
+    complex<double> w = -1;
+    data = bitReversedPar(data);
+
+    int size = 0;
+    for (int etape = 0; etape < log2(nbPE); etape++) {
+        size = pow(2, etape);
+        
+        // Partie sans communication
+        if (size < (nbPE/data.size()) {
+            stepSeq(data, w, size);
+        }
+
+        // Partie avec communication
+        else {
+            stepPar(data, w, size);
+        }
+    }
+}
 
 // Initialisation aléatoire d'un vecteur de nombres complexes
 void randInit(vector<complex<double> >& data,double min, double max) {
