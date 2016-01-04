@@ -10,8 +10,11 @@
 #include <cstring>
 #include <cmath>
 #include <mpi.h>
+#include <bitset>
 
 using namespace std;
+
+void printAll(vector<complex<double> > data,string label);
 
 // Une etape de la FFT sequentielle
 void stepSeq(vector<complex<double> >& data,
@@ -30,54 +33,91 @@ void stepSeq(vector<complex<double> >& data,
     w = sqrt(w);
 }
 
-void bitReversedPar(vector<complex<double> >& data) {
+void DecToBinReverse(int id, char* id_bin){
 
+	int i = 0;
+
+    do
+    {
+        if ( (id & 1) == 0 )
+            id_bin[i] = '0';
+        else
+            id_bin[i] = '1';
+
+        id >>= 1;
+        i++;
+        
+    } while ( id );
+}
+
+void bitReversedPar(vector<complex<double> >& data) {
+	
 	int nbPE,myPE;
     MPI_Comm_size(MPI_COMM_WORLD,&nbPE);
     MPI_Comm_rank(MPI_COMM_WORLD,&myPE);
     
-    cout << ("id en dec : ") << myPE;
+    //cout << myPE << (", data avant :") << data[0].real() << endl;
+    
+	int nbbits = log2(nbPE);
 
-    // Converti son id en binaire
-    string MyPEbit = DestoBin(myPE);
-    
-    cout << ("id en bit : ") << MyPEbit;
-    
-    //inverse les bits
-    string MyPEbitinverse[MyPEbit.length()];
-    
-    int j = 0;
-    for(i = MyPEbit.length; i >= MyPEbit.length; i---){
-		    MyPEbitinverse[j]=MyPEbit[i];
-		    j++;		    
-    }
-    
-    cout << ("id inverse en bit : ") << MyPEbitinverse;
-    
-    // converti les bits en decimal
-    int Id_Proc_binome;
-    for(i = 0; i < MyPEbitinverse.length; i++){
-		    Id_Proc_binome += (2^i)*MyPEbitinverse[i];		    
-    } 
-    
-    cout << ("id inverse en dec : ") << Id_Proc_binome;
-}
+	//cout << ("sur cb bits : ") << nbbits << endl;
 
-string DecToBin(int number){
-    string result = "";
-
-    do
-    {
-        if ( (number & 1) == 0 )
-            result += "0";
-        else
-            result += "1";
-
-        number >>= 1;
-    } while ( number );
-
-    reverse(result.begin(), result.end());
-    return result;
+	//cout << ("id en dec : ") << myPE << endl;
+	
+	//alloue pour l id en binaire		
+	char* id_bin = (char *)calloc((nbbits+1),sizeof(char));
+	
+	//initialiste l id
+	for(int i = 0; i < nbbits; i++)
+		id_bin[i]='0';
+		
+	//convertie l id en binaire et l inverse
+	DecToBinReverse(myPE,id_bin);
+	
+	//cout << ("id en binaire inverse : ") << id_bin << endl;
+	
+	int idbinome = 0;
+	
+	//converti l id binaire inverse en decimal
+	int j = nbbits-1;
+	for(int i = 0; i < nbbits; i++){
+		char tmp = id_bin[i];
+		idbinome += pow(2,j) * atoi(&tmp);
+		j--;
+	}
+		
+	//cout << ("id du binome : ") << idbinome << endl;
+	
+	int buf_size = data.size()*2;
+	double* send_buf = new double[buf_size];
+	double* recv_buf = new double[buf_size];
+	for (int k=0;k<buf_size/2;k++) {
+  		send_buf[2*k] = data[k].real();
+  		send_buf[2*k+1] = data[k].imag();
+	}
+	//si plus petit que son binome attend et ensuite envoie
+	if(myPE < idbinome){
+		//recois de son binome
+		MPI_Recv(recv_buf, buf_size, MPI_DOUBLE, idbinome, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		
+		//envoie a son binome
+		MPI_Send(send_buf, buf_size, MPI_DOUBLE, idbinome , 0, MPI_COMM_WORLD);
+	}else{
+		//envoie a son binome
+		MPI_Send(send_buf, buf_size, MPI_DOUBLE, idbinome , 0, MPI_COMM_WORLD);
+			
+		//recois de son binome
+		MPI_Recv(recv_buf, buf_size, MPI_DOUBLE, idbinome, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+	}
+	
+	//met à jour data
+	for (int k=0;k<buf_size/2;k++) {
+  		data[k].real() = recv_buf[2*k];
+  		data[k].imag() = recv_buf[2*k+1];
+	}
+	
+	//cout << myPE << (", data apres :") << data[0].real() << endl;
+	
 }
 
 void swapPar(complex<double> loc, int proc) {
