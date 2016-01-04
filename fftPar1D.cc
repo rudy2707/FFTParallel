@@ -112,16 +112,42 @@ void bitReversedPar(vector<complex<double> >& data) {
 	
 	//met à jour data
 	for (int k=0;k<buf_size/2;k++) {
-  		data[k].real() = recv_buf[2*k];
-  		data[k].imag() = recv_buf[2*k+1];
+        complex<double> tmpLoc(recv_buf[2*k], recv_buf[2*k+1]);
+        data[k] = tmpLoc;
+  		//data[k].real = recv_buf[2*k];
+  		//data[k].imag = recv_buf[2*k+1];
 	}
 	
 	//cout << myPE << (", data apres :") << data[0].real() << endl;
 	
 }
 
-void swapPar(complex<double> loc, int proc) {
-    // TODO 
+void swapPar(complex<double>& loc, int proc) {
+    
+    // Get process id
+    int myPE;
+    MPI_Comm_rank(MPI_COMM_WORLD,&myPE);
+    
+    // Init of buffer to send and receive the complex number to send
+    double* send_buf = new double[2];
+    double* recv_buf = new double[2];
+    
+    // Put in send buffer the complex number
+    send_buf[0] = loc.real();
+    send_buf[1] = loc.imag();
+
+    // Determine an order for send and receive
+    if (proc > myPE) {
+        MPI_Send(send_buf, 2, MPI_DOUBLE, proc, 0, MPI_COMM_WORLD);
+        MPI_Recv(recv_buf, 2, MPI_DOUBLE, proc, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    } else {
+        MPI_Recv(recv_buf, 2, MPI_DOUBLE, proc, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Send(send_buf, 2, MPI_DOUBLE, proc, 0, MPI_COMM_WORLD);
+    }
+
+    // Update the loc data
+    complex<double> tmpLoc(recv_buf[0], recv_buf[1]);
+    loc = tmpLoc;
 }
 
 // Une etape de la FFT parallele
@@ -205,11 +231,17 @@ void printAll(vector<complex<double> > data,string label) {
    double* recv_buf = new double[nbPE*buf_size];
    MPI_Gather(send_buf,buf_size,MPI_DOUBLE,recv_buf,buf_size,MPI_DOUBLE,0,MPI_COMM_WORLD);
    if (myPE == 0) {
-      cout << label;
+      //cout << label;
+      //for (int k=0;k<nbPE*buf_size;k++) {
+      //   cout << recv_buf[k] << " ";
+      //   if ((k+1)%2 == 0) cout << endl;
+      //}
+      cout << label << endl << "A = [";
       for (int k=0;k<nbPE*buf_size;k++) {
-         cout << recv_buf[k] << " ";
-         if ((k+1)%2 == 0) cout << endl;
+         if ((k+1)%2 == 0) cout << "+(" << recv_buf[k] << "i);" << endl;
+         else cout << recv_buf[k] << " ";
       }
+      cout << "];" << endl;
    }
    delete recv_buf; 
 }
@@ -223,10 +255,12 @@ int main(int argc,char ** argv) {
    int nloc = atoi(argv[2]);
    vector<complex<double> > data(nloc);
    randInit(data,0.0,100.0);
-   cout << "Before FFT" << endl;
+   //cout << "Before FFT" << endl;
+   MPI_Barrier(MPI_COMM_WORLD);
    printAll(data,"%A\n");
    fftPar(data);
-   cout << "After FFT" << endl;
+   //cout << "After FFT" << endl;
+   MPI_Barrier(MPI_COMM_WORLD);
    printAll(data,"%B\n");
    cout << "Done" << endl;
    MPI_Finalize();
