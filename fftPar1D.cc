@@ -236,7 +236,7 @@ void printAll(vector<complex<double> > data,string label) {
       //   cout << recv_buf[k] << " ";
       //   if ((k+1)%2 == 0) cout << endl;
       //}
-      cout << label << endl << "A = [";
+      cout << label << " = [";
       for (int k=0;k<nbPE*buf_size;k++) {
          if ((k+1)%2 == 0) cout << "+(" << recv_buf[k] << "i);" << endl;
          else cout << recv_buf[k] << " ";
@@ -257,11 +257,11 @@ int main(int argc,char ** argv) {
    randInit(data,0.0,100.0);
    //cout << "Before FFT" << endl;
    MPI_Barrier(MPI_COMM_WORLD);
-   printAll(data,"%A\n");
+   printAll(data,"A\n");
    fftPar(data);
    //cout << "After FFT" << endl;
    MPI_Barrier(MPI_COMM_WORLD);
-   printAll(data,"%B\n");
+   printAll(data,"B\n");
    cout << "Done" << endl;
    MPI_Finalize();
    return 0;
