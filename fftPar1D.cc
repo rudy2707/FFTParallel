@@ -78,7 +78,6 @@ string DecToBin(int number){
 
     reverse(result.begin(), result.end());
     return result;
->>>>>>> 2c28e5d3aa39c65472ea8a7c5635160dca8eb9a0
 }
 
 void swapPar(complex<double> loc, int proc) {
