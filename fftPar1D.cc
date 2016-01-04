@@ -30,7 +30,7 @@ void stepSeq(vector<complex<double> >& data,
     w = sqrt(w);
 }
 
-void bitReversedPar(vector<complex<double>>& data) {
+void bitReversedPar(vector<complex<double> >& data) {
     // TODO
 }
 
@@ -45,9 +45,9 @@ void stepPar(vector<complex<double> >& data, complex<double>& w, int d) {
     MPI_Comm_rank(MPI_COMM_WORLD,&myPE);
 
     int nloc = nbPE / data.size();
-    int wk = 1;
+    complex<double> wk = 1;
     
-    for (int i = 1; i < ((myPE * nloc) % size); i++) {
+    for (int i = 1; i < ((myPE * nloc) % d); i++) {
         wk = w*wk;
     }
 
@@ -56,15 +56,15 @@ void stepPar(vector<complex<double> >& data, complex<double>& w, int d) {
     for (int k = 0; k < nloc-1; k++) {
         indGlobal = k + myPE * nloc;    // Indice global dans la partie paire
 
-        if ((indGlobal & (0x1 << (int)log2(size))) == 0) {
+        if ((indGlobal & (0x1 << (int)log2(d))) == 0) {
             oldElement = data[k];
-            swapPar(data[k], myPE ^ (size/nloc));
+            swapPar(data[k], myPE ^ (d/nloc));
             data[k] = data[k] + oldElement;
         }
         else {
             data[k] = wk * data[k];
             oldElement = data[k];
-            swapPar(data[k], myPE ^ (size/nloc));
+            swapPar(data[k], myPE ^ (d/nloc));
             data[k] = data[k] - oldElement;
         }
 
@@ -81,14 +81,14 @@ void fftPar(vector<complex<double> >& data) {
     MPI_Comm_rank(MPI_COMM_WORLD,&myPE);
 
     complex<double> w = -1;
-    data = bitReversedPar(data);
+    bitReversedPar(data);
 
     int size = 0;
     for (int etape = 0; etape < log2(nbPE); etape++) {
         size = pow(2, etape);
         
         // Partie sans communication
-        if (size < (nbPE/data.size()) {
+        if (size < (nbPE/data.size())) {
             stepSeq(data, w, size);
         }
 
@@ -137,9 +137,12 @@ int main(int argc,char ** argv) {
    int nloc = atoi(argv[2]);
    vector<complex<double> > data(nloc);
    randInit(data,0.0,100.0);
+   cout << "Before FFT" << endl;
    printAll(data,"%A\n");
-   //fftPar(data);
+   fftPar(data);
+   cout << "After FFT" << endl;
    printAll(data,"%B\n");
+   cout << "Done" << endl;
    MPI_Finalize();
    return 0;
 }
