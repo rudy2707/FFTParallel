@@ -36,7 +36,7 @@ void bitReversedPar(vector<complex<double> >& data) {
     MPI_Comm_size(MPI_COMM_WORLD,&nbPE);
     MPI_Comm_rank(MPI_COMM_WORLD,&myPE);
     
-    cout << ("id en des : ") << myPE;
+    cout << ("id en dec : ") << myPE;
 
     // Converti son id en binaire
     string MyPEbit = DestoBin(myPE);
