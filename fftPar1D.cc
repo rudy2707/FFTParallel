@@ -31,7 +31,54 @@ void stepSeq(vector<complex<double> >& data,
 }
 
 void bitReversedPar(vector<complex<double> >& data) {
-    // TODO
+
+	int nbPE,myPE;
+    MPI_Comm_size(MPI_COMM_WORLD,&nbPE);
+    MPI_Comm_rank(MPI_COMM_WORLD,&myPE);
+    
+    cout << ("id en des : ") << myPE;
+
+    // Converti son id en binaire
+    string MyPEbit = DestoBin(myPE);
+    
+    cout << ("id en bit : ") << MyPEbit;
+    
+    //inverse les bits
+    string MyPEbitinverse[MyPEbit.length()];
+    
+    int j = 0;
+    for(i = MyPEbit.length; i >= MyPEbit.length; i---){
+		    MyPEbitinverse[j]=MyPEbit[i];
+		    j++;		    
+    }
+    
+    cout << ("id inverse en bit : ") << MyPEbitinverse;
+    
+    // converti les bits en decimal
+    int Id_Proc_binome;
+    for(i = 0; i < MyPEbitinverse.length; i++){
+		    Id_Proc_binome += (2^i)*MyPEbitinverse[i];		    
+    } 
+    
+    cout << ("id inverse en dec : ") << Id_Proc_binome;
+}
+
+string DecToBin(int number){
+    string result = "";
+
+    do
+    {
+        if ( (number & 1) == 0 )
+            result += "0";
+        else
+            result += "1";
+
+        number >>= 1;
+    } while ( number );
+
+    reverse(result.begin(), result.end());
+    return result;
+>>>>>>> 2c28e5d3aa39c65472ea8a7c5635160dca8eb9a0
 }
 
 void swapPar(complex<double> loc, int proc) {
