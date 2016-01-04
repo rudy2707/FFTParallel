@@ -138,7 +138,7 @@ int main(int argc,char ** argv) {
    vector<complex<double> > data(nloc);
    randInit(data,0.0,100.0);
    printAll(data,"%A\n");
-   fftPar(data);
+   //fftPar(data);
    printAll(data,"%B\n");
    MPI_Finalize();
    return 0;
