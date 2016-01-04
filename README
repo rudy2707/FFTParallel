@@ -6,3 +6,8 @@ To run the 1 Dimension parallel algo:
 
 To run the Parallel algo:
     make run
+
+To test the 1 Dimension parallel algo:
+    make test
+    octave --no-gui
+    check

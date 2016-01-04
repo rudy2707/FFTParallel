@@ -12,6 +12,7 @@ RM=rm -f
 PROC=16
 SEED=19
 DATA=8
+OUT=out.m
 
 $(EXECSEQ): fftSeq.o
 	@$(CC) $^ -o $@
@@ -41,8 +42,13 @@ seq: $(EXECSEQ)
 one: $(EXEC1D)
 	@$(RUN) $(RFLAGS) $(PROC) $< $(SEED) $(DATA)
 
+test: $(EXEC1D)
+	@$(RUN) $(RFLAGS) $(PROC) $< $(SEED) $(DATA) > $(OUT)
+
+
 clean:
 	@$(RM) *.o
+	@$(RM) $(OUT)
 	@$(RM) $(EXEC)
 	@$(RM) $(EXEC1D)
 	@$(RM) $(EXECSEQ)
