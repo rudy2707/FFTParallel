@@ -56,6 +56,7 @@ void bitReversedPar(vector<complex<double> >& data) {
 	int nbPE,myPE;
     MPI_Comm_size(MPI_COMM_WORLD,&nbPE);
     MPI_Comm_rank(MPI_COMM_WORLD,&myPE);
+    cout << "[Process " << myPE << "] bitReversedPar"<< endl;
     
     for (int j = 0;j < data.size();j++){
     
@@ -88,15 +89,15 @@ void bitReversedPar(vector<complex<double> >& data) {
 		//Calcul du processeur contenant le binome
 		int idprocbinome = idbinome/data.size();
 		
-		if((myPE == 0 && j==2) || (myPE == 1 && j==0)){
-			/*cout << ("[Process ") << myPE << ("] nombre data en local : ") << data.size() << endl;
-			cout << ("[Process ") << myPE << ("] data [") << idreeldata << ("] avant :") << data[j].real() << endl;
-			cout << ("[Process ") << myPE << ("] sur cb bits : ") << nbbits << endl;
-			cout << ("[Process ") << myPE << ("] id en dec : ") << idreeldata << endl;
-			cout << ("[Process ") << myPE << ("] id en binaire inverse : ") << id_bin << endl;
-			cout << ("[Process ") << myPE << ("] id du binome : ") << idbinome << endl;
-			cout << ("[Process ") << myPE << ("] id du processeur contenant le binome : ") << idprocbinome << endl;*/
-		}
+		//if((myPE == 0 && j==2) || (myPE == 1 && j==0)){
+		//	cout << ("[Process ") << myPE << ("] nombre data en local : ") << data.size() << endl;
+		//	cout << ("[Process ") << myPE << ("] data [") << idreeldata << ("] avant :") << data[j].real() << endl;
+		//	cout << ("[Process ") << myPE << ("] sur cb bits : ") << nbbits << endl;
+		//	cout << ("[Process ") << myPE << ("] id en dec : ") << idreeldata << endl;
+		//	cout << ("[Process ") << myPE << ("] id en binaire inverse : ") << id_bin << endl;
+		//	cout << ("[Process ") << myPE << ("] id du binome : ") << idbinome << endl;
+		//	cout << ("[Process ") << myPE << ("] id du processeur contenant le binome : ") << idprocbinome << endl;
+		//}
 		
 		//stock nombre complex dans un buffer pour l'envoie
 		int buf_size = 2;
@@ -126,8 +127,8 @@ void bitReversedPar(vector<complex<double> >& data) {
 		complex<double> tmpLoc(recv_buf[0], recv_buf[1]);
 		data[j] = tmpLoc;
 		
-		//if((myPE == 0 && j==2) || (myPE == 1 && j==0))
-			//cout << ("[Process ") << myPE << ("] data apres :") << data[j].real() << endl;
+		if((myPE == 0 && j==2) || (myPE == 1 && j==0))
+			cout << ("[Process ") << myPE << ("] data apres :") << data[j].real() << endl;
 	}
 	
 }
@@ -138,6 +139,8 @@ void swapPar(complex<double>& loc, int proc) {
     int myPE;
     MPI_Comm_rank(MPI_COMM_WORLD,&myPE);
     
+    cout << "[Process " << myPE << "] swapPar"<< endl;
+
     // Init of buffer to send and receive the complex number to send
     double* send_buf = new double[2];
     double* recv_buf = new double[2];
@@ -165,6 +168,8 @@ void stepPar(vector<complex<double> >& data, complex<double>& w, int d) {
     int nbPE,myPE;
     MPI_Comm_size(MPI_COMM_WORLD,&nbPE);
     MPI_Comm_rank(MPI_COMM_WORLD,&myPE);
+
+    cout << "[Process " << myPE << "] stepPar"<< endl;
 
     int nloc = nbPE / data.size();
     complex<double> wk = 1;
@@ -201,6 +206,8 @@ void fftPar(vector<complex<double> >& data) {
     int nbPE,myPE;
     MPI_Comm_size(MPI_COMM_WORLD,&nbPE);
     MPI_Comm_rank(MPI_COMM_WORLD,&myPE);
+
+    cout << "[Process " << myPE << "] fftPar"<< endl;
 
     complex<double> w = polar(1.0,-pi);
     bitReversedPar(data);
