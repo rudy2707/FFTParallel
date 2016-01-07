@@ -34,3 +34,4 @@
 fftSeq
 fftPar1D
 fftParallel
+filtragePar
