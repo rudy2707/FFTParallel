@@ -35,3 +35,5 @@ fftSeq
 fftPar1D
 fftParallel
 filtragePar
+out.m
+octave-workspace
