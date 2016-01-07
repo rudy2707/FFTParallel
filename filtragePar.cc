@@ -24,6 +24,8 @@
 #include <string>
 #include <stdlib.h>
 
+#include "fftPar1D.h"
+
 using namespace std;
 
 #define NAME_FILTERED "_filtre"

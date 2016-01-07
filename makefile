@@ -5,7 +5,7 @@ RFLAGS=-np
 
 EXECSEQ=fftSeq
 EXEC1D=fftPar1D
-EXEC=fftParallel
+EXEC=filtragePar
 
 RM=rm -f
 
@@ -17,7 +17,7 @@ OUT=out.m
 $(EXECSEQ): fftSeq.o
 	@$(CC) $^ -o $@
 
-fftSeq.o: fftSeq.cc 
+fftSeq.o: fftSeq.cc
 	@$(CC) -c $<
 
 $(EXEC1D): fftPar1D.o
@@ -29,12 +29,11 @@ fftPar1D.o: fftPar1D.cc
 $(EXEC): fftParallel.o
 	@$(CC) $^ -o $@
 
-fftParallel.o: fftParallel.cc
+filtragePar.o: filtragePar.cc fftPar1D.o
 	@$(CC) -c $<
 
 run: $(EXEC)
-	@echo "not implemented yet"
-	#@$(RUN) $(RFLAGS) $(PROC) $< $(SEED) $(DATA)
+	@$(RUN) $(RFLAGS) $(PROC) $< $(SEED) $(DATA)
 
 seq: $(EXECSEQ)
 	@$(RUN) $(RFLAGS) $(PROC) $< $(SEED) $(DATA)
@@ -52,4 +51,4 @@ clean:
 	@$(RM) $(EXEC)
 	@$(RM) $(EXEC1D)
 	@$(RM) $(EXECSEQ)
-	
+
