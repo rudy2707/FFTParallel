@@ -13,6 +13,7 @@
 #include <bitset>
 
 using namespace std;
+const double pi      = 3.14159265358979323846264;
 
 void printAll(vector<complex<double> > data,string label);
 
@@ -56,69 +57,78 @@ void bitReversedPar(vector<complex<double> >& data) {
     MPI_Comm_size(MPI_COMM_WORLD,&nbPE);
     MPI_Comm_rank(MPI_COMM_WORLD,&myPE);
     
-    //cout << myPE << (", data avant :") << data[0].real() << endl;
+    for (int j = 0;j < data.size();j++){
     
-	int nbbits = log2(nbPE);
-
-	//cout << ("sur cb bits : ") << nbbits << endl;
-
-	//cout << ("id en dec : ") << myPE << endl;
-	
-	//alloue pour l id en binaire		
-	char* id_bin = (char *)calloc((nbbits+1),sizeof(char));
-	
-	//initialiste l id
-	for(int i = 0; i < nbbits; i++)
-		id_bin[i]='0';
+		//Calcul de l'id réel (en global sur tous les processeurs)		
+		int idreeldata = j+data.size()*myPE;
 		
-	//convertie l id en binaire et l inverse
-	DecToBinReverse(myPE,id_bin);
+		//Calcul sur combien de bits coder les addresses
+		int nbbits = log2(nbPE*data.size());	//fois data.size car plusieur data par proc
 	
-	//cout << ("id en binaire inverse : ") << id_bin << endl;
+		//alloue pour l id en binaire		
+		char* id_bin = (char *)calloc((nbbits+1),sizeof(char));
 	
-	int idbinome = 0;
-	
-	//converti l id binaire inverse en decimal
-	int j = nbbits-1;
-	for(int i = 0; i < nbbits; i++){
-		char tmp = id_bin[i];
-		idbinome += pow(2,j) * atoi(&tmp);
-		j--;
-	}
+		//initialiste l id
+		for(int i = 0; i < nbbits; i++)
+			id_bin[i]='0';
 		
-	//cout << ("id du binome : ") << idbinome << endl;
+		//convertie l id en binaire et l inverse
+		DecToBinReverse(idreeldata,id_bin);
 	
-	int buf_size = data.size()*2;
-	double* send_buf = new double[buf_size];
-	double* recv_buf = new double[buf_size];
-	for (int k=0;k<buf_size/2;k++) {
-  		send_buf[2*k] = data[k].real();
-  		send_buf[2*k+1] = data[k].imag();
-	}
-	//si plus petit que son binome attend et ensuite envoie
-	if(myPE < idbinome){
-		//recois de son binome
-		MPI_Recv(recv_buf, buf_size, MPI_DOUBLE, idbinome, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		int idbinome = 0;
+	
+		//converti l id binaire inverse en decimal
+		int x = nbbits-1;
+		for(int i = 0; i < nbbits; i++){
+			char tmp = id_bin[i];
+			idbinome += pow(2,x) * atoi(&tmp);
+			x--;
+		}
 		
-		//envoie a son binome
-		MPI_Send(send_buf, buf_size, MPI_DOUBLE, idbinome , 0, MPI_COMM_WORLD);
-	}else{
-		//envoie a son binome
-		MPI_Send(send_buf, buf_size, MPI_DOUBLE, idbinome , 0, MPI_COMM_WORLD);
+		//Calcul du processeur contenant le binome
+		int idprocbinome = idbinome/data.size();
+		
+		if((myPE == 0 && j==2) || (myPE == 1 && j==0)){
+			/*cout << ("[Process ") << myPE << ("] nombre data en local : ") << data.size() << endl;
+			cout << ("[Process ") << myPE << ("] data [") << idreeldata << ("] avant :") << data[j].real() << endl;
+			cout << ("[Process ") << myPE << ("] sur cb bits : ") << nbbits << endl;
+			cout << ("[Process ") << myPE << ("] id en dec : ") << idreeldata << endl;
+			cout << ("[Process ") << myPE << ("] id en binaire inverse : ") << id_bin << endl;
+			cout << ("[Process ") << myPE << ("] id du binome : ") << idbinome << endl;
+			cout << ("[Process ") << myPE << ("] id du processeur contenant le binome : ") << idprocbinome << endl;*/
+		}
+		
+		//stock nombre complex dans un buffer pour l'envoie
+		int buf_size = 2;
+		double* send_buf = new double[buf_size];
+		double* recv_buf = new double[buf_size];
+		
+  		send_buf[0] = data[j].real();
+  		send_buf[1] = data[j].imag();
+		
+		
+		//si plus petit que son binome attend et ensuite envoie (pour eviter collision)
+		if(myPE > idprocbinome){
+			//recois de son binome
+			MPI_Recv(recv_buf, buf_size, MPI_DOUBLE, idprocbinome, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		
+			//envoie a son binome
+			MPI_Send(send_buf, buf_size, MPI_DOUBLE, idprocbinome , 0, MPI_COMM_WORLD);
+		}else{
+			//envoie a son binome
+			MPI_Send(send_buf, buf_size, MPI_DOUBLE, idprocbinome , 0, MPI_COMM_WORLD);
 			
-		//recois de son binome
-		MPI_Recv(recv_buf, buf_size, MPI_DOUBLE, idbinome, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-	}
+			//recois de son binome
+			MPI_Recv(recv_buf, buf_size, MPI_DOUBLE, idprocbinome, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		}
 	
-	//met à jour data
-	for (int k=0;k<buf_size/2;k++) {
-        complex<double> tmpLoc(recv_buf[2*k], recv_buf[2*k+1]);
-        data[k] = tmpLoc;
-  		//data[k].real = recv_buf[2*k];
-  		//data[k].imag = recv_buf[2*k+1];
+		//met à jour data local avec celle de son binome
+		complex<double> tmpLoc(recv_buf[0], recv_buf[1]);
+		data[j] = tmpLoc;
+		
+		//if((myPE == 0 && j==2) || (myPE == 1 && j==0))
+			//cout << ("[Process ") << myPE << ("] data apres :") << data[j].real() << endl;
 	}
-	
-	//cout << myPE << (", data apres :") << data[0].real() << endl;
 	
 }
 
@@ -192,7 +202,7 @@ void fftPar(vector<complex<double> >& data) {
     MPI_Comm_size(MPI_COMM_WORLD,&nbPE);
     MPI_Comm_rank(MPI_COMM_WORLD,&myPE);
 
-    complex<double> w = -1;
+    complex<double> w = polar(1.0,-pi);
     bitReversedPar(data);
 
     int size = 0;

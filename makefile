@@ -9,9 +9,9 @@ EXEC=fftParallel
 
 RM=rm -f
 
-PROC=16
+PROC=4
 SEED=19
-DATA=8
+DATA=4
 OUT=out.m
 
 $(EXECSEQ): fftSeq.o

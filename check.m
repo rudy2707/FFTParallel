@@ -4,7 +4,9 @@
 
 out;    % Import out.m
 
-C = fft(A);
+A
+B
+C = fft(A)
 
 if C == B
     disp("CORRECT")
