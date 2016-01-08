@@ -26,4 +26,6 @@ using namespace std;
 
 void fftPar(vector<complex<double> >& data);
 
+void ifftPar(vector<complex<double> >& data);
+
 #endif

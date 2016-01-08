@@ -33,7 +33,7 @@ $(EXEC): $(EXEC).o fftPar1D.o
 filtragePar.o: filtragePar.cc
 	@$(CC) -c $<
 
-run: $(EXEC) 
+run: $(EXEC)
 	@$(RUN) $(RFLAGS) $(PROC) $^ $(ARGS)
 
 seq: $(EXECSEQ)
