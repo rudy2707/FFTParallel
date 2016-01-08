@@ -94,74 +94,6 @@ int main(int argc, char* argv[]) {
     cout << "[Process " << myPE << "] Img size : " << imgSize << endl;
     int sizeLocal = imgSize / nbPE;
 
-    //if (myPE == 0) {
-    //    // Send parts of row to other process and then process its own part
-    //    // Apply FFT on each row and then on each column
-    //    // Run over each row and apply the FFT
-    //    for (int i = 0; i < imgSize; i++) {
-    //        cout << "[Process " << myPE << "] row : " << i << endl;
-    //        vector<complex<double> > row;
-    //        for (int j = 0; j < imgSize; j++) {
-    //            row.push_back(data[i * imgSize + j]);
-    //        }
-    //        // Split the row by the number of process and send the data to them
-    //        // Send all the parts and then process its own
-    //        for (int k = 1; k < nbPE; k++) {
-    //            cout << "[Process " << myPE << "] Send to " << k << endl;
-    //            vector<complex<double> > rowLocal(row.begin() + (k * sizeLocal), row.begin() + (k * sizeLocal) + sizeLocal);
-    //            double* send_buf = complexToBuffer(rowLocal);
-    //            MPI_Send(send_buf, sizeLocal * 2, MPI_DOUBLE, k, 0, MPI_COMM_WORLD);
-    //            cout << "[Process " << myPE << "] After send to " << k << endl;
-    //            //delete send_buf;
-    //        }
-
-    //        // Process its own part
-    //        vector<complex<double> > rowLocal(row.begin(), row.begin() + sizeLocal);
-
-    //        //fftPar(rowLocal);
-
-    //        for (int j = 0; j < sizeLocal; j++) {
-    //            data[i * imgSize + j] = rowLocal[j];
-    //        }
-
-	//	    double* recv_buf = new double[sizeLocal * 2];
-    //        // Receive data from other process
-    //        for (int k = 1; k < nbPE; k++) {
-    //            cout << "[Process " << myPE << "] Before Receive from " << k << endl;
-    //            MPI_Recv(recv_buf, sizeLocal * 2, MPI_DOUBLE, k, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    //            cout << "[Process " << myPE << "] After Receive from " << k << endl;
-    //            // Modification of computed value in data vector
-    //            vector<complex<double> > rowPartFiltered = bufferToComplex(recv_buf, sizeLocal * 2);
-    //            for (int j = 0; j < sizeLocal; j++) {
-    //                data[i * imgSize + (k * sizeLocal) + j] = rowPartFiltered[j];
-    //            }
-    //        }
-    //        //delete recv_buf;
-    //    }
-    //}
-    //else {
-    //    // Reception of data and FFT process
-	//	double* recv_buf = new double[sizeLocal * 2];
-    //    // Process each rows
-    //    for (int i = 0; i < imgSize; i++) {
-    //        cout << "[Process " << myPE << "] row : " << i << endl;
-    //        // Recreate the vector of complex
-    //        MPI_Recv(recv_buf, sizeLocal * 2, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    //        cout << "[Process " << myPE << "] After Receive" << endl;
-    //        cout << "[Process " << myPE << "] Before complex -------------------" << endl;
-    //        vector<complex<double> > rowLocal = bufferToComplex(recv_buf, sizeLocal * 2);
-    //        cout << "[Process " << myPE << "] After complex -------------------" << endl;
-
-    //        //fftPar(rowLocal);
-
-    //        double* send_buf = complexToBuffer(rowLocal);
-    //        MPI_Send(send_buf, sizeLocal * 2, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
-    //        cout << "[Process " << myPE << "] After Send" << endl;
-    //        //delete send_buf;
-    //    }
-    //    //delete recv_buf;
-    //}
-
     processFFT(data, imgSize, true, true);
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -171,20 +103,20 @@ int main(int argc, char* argv[]) {
     MPI_Barrier(MPI_COMM_WORLD);
 
     // Filter frequencies by setting corner to 0
-    //int nbFilter = imgSize * percent / 100;
-    //if (myPE == 0) {
-    //    for (int i = 0; i < imgSize; i++) {
-    //        for (int j = 0; j < imgSize; j++) {
-    //            data[i + j * imgSize] = 0;
-    //            if (j == nbFilter) {
-    //                j += imgSize - nbFilter * 2;
-    //            }
-    //            if (i == nbFilter) {
-    //                i += imgSize - nbFilter * 2;
-    //            }
-    //        }
-    //    }
-    //}
+    int nbFilter = imgSize * percent / 100;
+    if (myPE == 0) {
+        for (int i = 0; i < imgSize; i++) {
+            for (int j = 0; j < imgSize; j++) {
+                data[i + j * imgSize] = 0;
+                if (j == nbFilter) {
+                    j += imgSize - nbFilter * 2;
+                }
+                if (i == nbFilter) {
+                    i += imgSize - nbFilter * 2;
+                }
+            }
+        }
+    }
 
     processFFT(data, imgSize, true, false);
 
@@ -194,22 +126,6 @@ int main(int argc, char* argv[]) {
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-
-
-    // Run over each column and apply the FFT
-    //for (int j = 0; j < imgSize; j++) {
-    //    vector<complex<double> > column;
-    //    for (int i = 0; i < imgSize; i++) {
-    //        column.push_back(data[i * imgSize + j]);
-    //    }
-    //    //fftPar(column);
-    //    // Replace data with value computed in column
-    //    for (int i = 0; i < imgSize; i++) {
-    //        data[i * imgSize + j] = column[j];
-    //    }
-    //}
-
-    // prendre la valeur absolue des reel pour reobtenir l'image (% 255 ???)
     // Only root process wrties the filtered image
     if (myPE == 0) {
         ofstream out;
@@ -235,6 +151,16 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
+/**
+ * @brief Process the FFT, split the row / column and send them to all the process.
+ *
+ * This is the process number 0 which dispatch data to other processes.
+ *
+ * @param data      All data
+ * @param imgSize   Size of image (one dimension)
+ * @param isRow     If we are processing the rows
+ * @param isFFT     If we are doing the fft of the ifft
+ */
 void processFFT(vector<complex<double> > &data, int imgSize, bool isRow, bool isFFT) {
     int nbPE,myPE;
     MPI_Comm_size(MPI_COMM_WORLD, &nbPE);
@@ -250,48 +176,53 @@ void processFFT(vector<complex<double> > &data, int imgSize, bool isRow, bool is
         // Apply FFT on each row and then on each column
         // Run over each row and apply the FFT
         for (int i = 0; i < imgSize; i++) {
-            vector<complex<double> > row;
+            vector<complex<double> > rowOrCol;  // Curent row or column depending on the operation we are running
             for (int j = 0; j < imgSize; j++) {
                 if (isRow)
-                    row.push_back(data[i * imgSize + j]);
+                    rowOrCol.push_back(data[i * imgSize + j]);
                 else
-                    row.push_back(data[j * imgSize + i]);
+                    rowOrCol.push_back(data[j * imgSize + i]);
             }
             // Split the row by the number of process and send the data to them
             // Send all the parts and then process its own
             for (int k = 1; k < nbPE; k++) {
-                vector<complex<double> > rowLocal(row.begin() + (k * sizeLocal), row.begin() + (k * sizeLocal) + sizeLocal );
-                double* send_buf = complexToBuffer(rowLocal);
+                vector<complex<double> > dataLocal(rowOrCol.begin() + (k * sizeLocal), rowOrCol.begin() + (k * sizeLocal) + sizeLocal );
+                double* send_buf = complexToBuffer(dataLocal);
                 MPI_Send(send_buf, sizeLocal * 2, MPI_DOUBLE, k, 0, MPI_COMM_WORLD);
                 //delete send_buf;
             }
 
             // Process its own part
-            vector<complex<double> > rowLocal(row.begin(), row.begin() + sizeLocal);
+            vector<complex<double> > dataLocal(rowOrCol.begin(), rowOrCol.begin() + sizeLocal);
 
-            for (int j = 0; j < sizeLocal; j++) {
-                if (isRow)
-                    data[i * imgSize + j] = rowLocal[j];
-                else
-                    data[j * imgSize + i] = rowLocal[j];
+            if (isFFT) {
+                fftPar(dataLocal);
+            }
+            else {
+                ifftPar(dataLocal);
             }
 
-            if (isFFT)
-                fftPar(rowLocal);
-            else
-                ifftPar(rowLocal);
+            for (int j = 0; j < sizeLocal; j++) {
+                if (isRow) {
+                    data[i * imgSize + j] = dataLocal[j];
+                }
+                else {
+                    cout << "Column " << j * imgSize + i << " -> " << dataLocal[j] << endl;
+                    data[j * imgSize + i] = dataLocal[j];
+                }
+            }
 
 		    recv_buf = new double[sizeLocal * 2];
             // Receive data from other process
             for (int k = 1; k < nbPE; k++) {
                 MPI_Recv(recv_buf, sizeLocal * 2, MPI_DOUBLE, k, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 // Modification of computed value in data vector
-                vector<complex<double> > rowPartFiltered = bufferToComplex(recv_buf, sizeLocal * 2);
+                vector<complex<double> > dataPartFiltered = bufferToComplex(recv_buf, sizeLocal * 2);
                 for (int j = 0; j < sizeLocal; j++) {
                     if (isRow)
-                        data[i * imgSize + (k * sizeLocal) + j] = rowPartFiltered[j];
+                        data[i * imgSize + (k * sizeLocal) + j] = dataPartFiltered[j];
                     else
-                        data[imgSize * k * sizeLocal + i + j * imgSize] = rowPartFiltered[j];
+                        data[imgSize * k * sizeLocal + i + j * imgSize] = dataPartFiltered[j];
                 }
             }
             //delete recv_buf;
@@ -304,14 +235,14 @@ void processFFT(vector<complex<double> > &data, int imgSize, bool isRow, bool is
         for (int i = 0; i < imgSize; i++) {
             // Recreate the vector of complex
             MPI_Recv(recv_buf, sizeLocal * 2, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            vector<complex<double> > rowLocal = bufferToComplex(recv_buf, sizeLocal * 2);
+            vector<complex<double> > dataLocal = bufferToComplex(recv_buf, sizeLocal * 2);
 
             if (isFFT)
-                fftPar(rowLocal);
+                fftPar(dataLocal);
             else
-                ifftPar(rowLocal);
+                ifftPar(dataLocal);
 
-            double* send_buf = complexToBuffer(rowLocal);
+            double* send_buf = complexToBuffer(dataLocal);
             MPI_Send(send_buf, sizeLocal * 2, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
             //delete send_buf;
         }
