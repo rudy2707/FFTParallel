@@ -141,7 +141,7 @@ int main(int argc, char* argv[]) {
             out << "\n";
         }
         for (int i = 0; i < data.size(); i++) {
-            out << abs(real(data[i]));
+            out << (int)(abs(real(data[i])));
             //out << real(data[i]);
             out << "\n";
         }

@@ -5,8 +5,9 @@
 out;    % Import out.m
 
 A
-B
-C = fft(A)
+B;
+C = fft(A);
+D
 
 if C == B
     disp("CORRECT")
