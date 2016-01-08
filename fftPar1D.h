@@ -19,6 +19,10 @@
 #ifndef __FFT__PAR__1D
 #define __FFT__PAR__1D
 
+#include <vector>
+#include <complex>
+
+using namespace std;
 
 void fftPar(vector<complex<double> >& data);
 

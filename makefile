@@ -12,28 +12,29 @@ RM=rm -f
 PROC=4
 SEED=19
 DATA=4
+ARGS=evert.pgm 10
 OUT=out.m
 
-$(EXECSEQ): fftSeq.o
+$(EXECSEQ): $(EXECSEQ).o
 	@$(CC) $^ -o $@
 
-fftSeq.o: fftSeq.cc
+$(EXECSEQ).o: $(EXECSEQ).cc
 	@$(CC) -c $<
 
-$(EXEC1D): fftPar1D.o
+$(EXEC1D): $(EXEC1D).o
 	@$(CC) $^ -o $@
 
-fftPar1D.o: fftPar1D.cc
+$(EXEC1D).o: $(EXEC1D).cc
 	@$(CC) -c $<
 
-$(EXEC): fftParallel.o
+$(EXEC): $(EXEC).o
 	@$(CC) $^ -o $@
 
 filtragePar.o: filtragePar.cc fftPar1D.o
 	@$(CC) -c $<
 
 run: $(EXEC)
-	@$(RUN) $(RFLAGS) $(PROC) $< $(SEED) $(DATA)
+	@$(RUN) $(RFLAGS) $(PROC) $< $(ARGS)
 
 seq: $(EXECSEQ)
 	@$(RUN) $(RFLAGS) $(PROC) $< $(SEED) $(DATA)

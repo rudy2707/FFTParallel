@@ -51,6 +51,8 @@ int main(int argc, char* argv[])
     // Create an input file stream
 	ifstream in(filename.c_str(), ios::in);
 
+    cout << "Reading file : " << filename << endl;
+
     // Get the header (4 lines)
     string header[4];
 
