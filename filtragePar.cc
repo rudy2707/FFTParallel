@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
         }
 
         // Get the size of the file
-        imgSize = atoi(header[1].c_str()); 
+        imgSize = atoi(header[1].c_str());
 
         // Variable to store the current value when parsing the file
         int number;
@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
         // Close the filestream
         in.close();
     }
-  
+
     // Broadcast the size of the image to every process
     MPI_Bcast((void*)&imgSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
     cout << "[Process " << myPE << "] Img size : " << imgSize << endl;
@@ -98,7 +98,7 @@ int main(int argc, char* argv[]) {
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    //processFFT(data, imgSize, false, true);
+    processFFT(data, imgSize, false, true);
 
     MPI_Barrier(MPI_COMM_WORLD);
 

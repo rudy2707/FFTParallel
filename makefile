@@ -12,7 +12,7 @@ RM=rm -f
 PROC=64
 SEED=19
 DATA=4
-ARGS=evert.pgm 10
+ARGS=evert.pgm 5
 OUT=out.m
 
 $(EXECSEQ): $(EXECSEQ).o
