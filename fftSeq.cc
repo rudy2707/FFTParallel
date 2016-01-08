@@ -17,18 +17,25 @@ void bitInv(vector<complex<double> >& data) {
     complex<double> tmp;
     int resI;
     int size = log2(data.size());
-    
+
+    bool index[data.size()] = {false};
+
     // Parsing only the half array 
-    for (int i = 1; i < data.size()/2; i++) {
-        resI = 0;
-        for (int j = 0; j < size; j++) {
-            if (i & (0x1 << j)) {
-               resI |= 0x1 << (size - 1 - j); 
+    for (int i = 0; i < data.size(); i++) {
+        if (!index[i]) {
+            resI = 0;
+            for (int j = 0; j < size; j++) {
+                if (i & (0x1 << j)) {
+                   resI |= 0x1 << (size - 1 - j); 
+                }
             }
+
+            tmp = data[i];
+            data[i] = data[resI];
+            data[resI] = tmp;
+            index[i] = true;
+            index[resI] = true;
         }
-        tmp = data[i];
-        data[i] = data[resI];
-        data[resI] = tmp;
     }
 }
 
@@ -64,9 +71,11 @@ void randInit(vector<complex<double> >& data,double min, double max) {
 }
 
 // Affichage d'un vecteur de nombres complexes
-void print(vector<complex<double> > data) {
+void print(vector<complex<double> > data, char* label) {
+    cout << label << " = ["; 
    for (int k=0;k<data.size();k++)
-      cout << data[k].real() << " " << data[k].imag() << endl;
+      cout << data[k].real() << "+(" << data[k].imag() << "i);" << endl;
+   cout << "]" << endl;
 }
 
 int main(int argc,char ** argv) {
@@ -75,9 +84,9 @@ int main(int argc,char ** argv) {
    int n = atoi(argv[2]);
    vector<complex<double> > data(n);
    randInit(data,0.0,100.0);
-   print(data);
+   print(data, "A");
    fft(data);
    cout << "After FFT" << endl;
-   print(data);
+   print(data, "B");
    cout << "Done" << endl;
 }
