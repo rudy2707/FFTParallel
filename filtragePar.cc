@@ -186,11 +186,13 @@ int main(int argc, char* argv[]) {
     //    }
     //}
 
-    //processFFT(data, imgSize, true, false);
+    processFFT(data, imgSize, true, false);
 
-    //MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
 
-    //processFFT(data, imgSize, false, false);
+    processFFT(data, imgSize, false, false);
+
+    MPI_Barrier(MPI_COMM_WORLD);
 
 
 
@@ -274,10 +276,10 @@ void processFFT(vector<complex<double> > &data, int imgSize, bool isRow, bool is
                     data[j * imgSize + i] = rowLocal[j];
             }
 
-            //if (isFFT)
-            //    fftPar(rowLocal);
-            //else
-            //    ifftPar(rowLocal);
+            if (isFFT)
+                fftPar(rowLocal);
+            else
+                ifftPar(rowLocal);
 
 		    recv_buf = new double[sizeLocal * 2];
             // Receive data from other process
@@ -304,10 +306,10 @@ void processFFT(vector<complex<double> > &data, int imgSize, bool isRow, bool is
             MPI_Recv(recv_buf, sizeLocal * 2, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             vector<complex<double> > rowLocal = bufferToComplex(recv_buf, sizeLocal * 2);
 
-            //if (isFFT)
-            //    fftPar(rowLocal);
-            //else
-            //    ifftPar(rowLocal);
+            if (isFFT)
+                fftPar(rowLocal);
+            else
+                ifftPar(rowLocal);
 
             double* send_buf = complexToBuffer(rowLocal);
             MPI_Send(send_buf, sizeLocal * 2, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
