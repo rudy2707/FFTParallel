@@ -13,8 +13,6 @@
 #include <bitset>
 #include <string>
 
-#include "fftPar1D.h"
-
 using namespace std;
 const double pi      = 3.14159265358979323846264;
 
