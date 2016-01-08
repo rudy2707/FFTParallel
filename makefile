@@ -27,14 +27,14 @@ $(EXEC1D): $(EXEC1D).o
 $(EXEC1D).o: $(EXEC1D).cc
 	@$(CC) -c $<
 
-$(EXEC): $(EXEC).o
+$(EXEC): $(EXEC).o fftPar1D.o
 	@$(CC) $^ -o $@
 
-filtragePar.o: filtragePar.cc fftPar1D.o
+filtragePar.o: filtragePar.cc
 	@$(CC) -c $<
 
-run: $(EXEC)
-	@$(RUN) $(RFLAGS) $(PROC) $< $(ARGS)
+run: $(EXEC) 
+	@$(RUN) $(RFLAGS) $(PROC) $^ $(ARGS)
 
 seq: $(EXECSEQ)
 	@$(RUN) $(RFLAGS) $(PROC) $< $(SEED) $(DATA)

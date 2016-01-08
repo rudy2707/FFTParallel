@@ -301,23 +301,23 @@ void printAll(vector<complex<double> > data,string label) {
    delete recv_buf; 
 }
 
-int main(int argc,char ** argv) {
-   MPI_Init(&argc,&argv);
-   int myPE;
-   MPI_Comm_rank(MPI_COMM_WORLD,&myPE);
-   int seed = atoi(argv[1]);
-   srand48(seed+myPE);
-   int nloc = atoi(argv[2]);
-   vector<complex<double> > data(nloc);
-   randInit(data,0.0,100.0);
-   //cout << "Before FFT" << endl;
-   MPI_Barrier(MPI_COMM_WORLD);
-   printAll(data,"A");
-   fftPar(data);
-   //cout << "After FFT" << endl;
-   MPI_Barrier(MPI_COMM_WORLD);
-   printAll(data,"B");
-   // cout << "Done" << endl;
-   MPI_Finalize();
-   return 0;
-}
+//int main(int argc,char ** argv) {
+//   MPI_Init(&argc,&argv);
+//   int myPE;
+//   MPI_Comm_rank(MPI_COMM_WORLD,&myPE);
+//   int seed = atoi(argv[1]);
+//   srand48(seed+myPE);
+//   int nloc = atoi(argv[2]);
+//   vector<complex<double> > data(nloc);
+//   randInit(data,0.0,100.0);
+//   //cout << "Before FFT" << endl;
+//   MPI_Barrier(MPI_COMM_WORLD);
+//   printAll(data,"A");
+//   fftPar(data);
+//   //cout << "After FFT" << endl;
+//   MPI_Barrier(MPI_COMM_WORLD);
+//   printAll(data,"B");
+//   // cout << "Done" << endl;
+//   MPI_Finalize();
+//   return 0;
+//}
