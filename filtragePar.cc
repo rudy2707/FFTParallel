@@ -90,14 +90,14 @@ int main(int argc, char* argv[]) {
 
     // Broadcast the size of the image to every process
     MPI_Bcast((void*)&imgSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    cout << "[Process " << myPE << "] Img size : " << imgSize << endl;
     int sizeLocal = imgSize / nbPE;
-    cout << "[Process " << myPE << "] Size local : " << sizeLocal << endl;
 
+    // Apply FFT on image's rows
     processFFT(data, imgSize, true, true);
 
     MPI_Barrier(MPI_COMM_WORLD);
 
+    // Apply FFT on image's columns
     processFFT(data, imgSize, false, true);
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -118,15 +118,17 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    // Apply iFFT on image's rows
     processFFT(data, imgSize, true, false);
 
     MPI_Barrier(MPI_COMM_WORLD);
 
+    // Apply iFFT on image's columns
     processFFT(data, imgSize, false, false);
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    // Only root process wrties the filtered image
+    // Only root process writes the filtered image
     if (myPE == 0) {
         ofstream out;
         string ext = filename.substr(filename.find("."));
@@ -153,9 +155,12 @@ int main(int argc, char* argv[]) {
 }
 
 /**
- * @brief Process the FFT, split the row / column and send them to all the process.
+ * @brief Process the FFT, split the row / column and send them to all the processes.
  *
  * This is the process number 0 which dispatch data to other processes.
+ *
+ * If isRow is true, apply on rows, else on column
+ * If isFFT is true, apply FFT, else apply iFFT
  *
  * @param data      All data
  * @param imgSize   Size of image (one dimension)
@@ -250,6 +255,18 @@ void processFFT(vector<complex<double> > &data, int imgSize, bool isRow, bool is
     }
 }
 
+/**
+ * @brief Transformation of vector of complex into an array of double
+ *
+ * The array of double as twice as much value as the vector because we need to
+ * separate the imag and real part.
+ *
+ * The memory is allocated in the function and needs to be free outside.
+ *
+ * @param vec Vector to transform
+ *
+ * @return An array of double with values of vector
+ */
 double* complexToBuffer(vector<complex<double> > vec) {
     // Buffer with the double of the size for the real and the imaginary part
     double* buffer = new double[vec.size() * 2];
@@ -260,6 +277,14 @@ double* complexToBuffer(vector<complex<double> > vec) {
     return buffer;
 }
 
+/**
+ * @brief Transformation of an array of double into a vector of complex number
+ *
+ * @param buffer Array of double to transform
+ * @param size   Size of the array (double of the vector size)
+ *
+ * @return
+ */
 vector<complex<double> > bufferToComplex(double* buffer, int size) {
     vector<complex<double> > vec;
     for (int i = 0; i < size / 2; i++) {
