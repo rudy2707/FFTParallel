@@ -17,6 +17,7 @@ void bitInv(vector<complex<double> >& data) {
     int resI;
     int size = log2(data.size());
 
+    // Array of index with which we already swapped
     bool index[data.size()] = {false};
 
     // Parsing only the half array
@@ -73,11 +74,7 @@ void randInit(vector<complex<double> >& data,double min, double max) {
 
 // Affichage d'un vecteur de nombres complexes
 void print(vector<complex<double> > data, char* label) {
-<<<<<<< HEAD
-    cout << label << "=[";
-=======
     cout << label << " = [";
->>>>>>> 105867f708e9b65bb963c65d358a02fbf0f9e261
    for (int k=0;k<data.size();k++)
       cout << data[k].real() << "+(" << data[k].imag() << "i);" << endl;
    cout << "]" << endl;
@@ -91,13 +88,7 @@ int main(int argc,char ** argv) {
    randInit(data,0.0,100.0);
    print(data, "A");
    fft(data);
-<<<<<<< HEAD
-   //cout << "After FFT" << endl;
-   print(data, "B");
-   //cout << "Done" << endl;
-=======
    cout << "After FFT" << endl;
    print(data, "B");
    cout << "Done" << endl;
->>>>>>> 105867f708e9b65bb963c65d358a02fbf0f9e261
 }
