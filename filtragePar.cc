@@ -73,8 +73,7 @@ int main(int argc, char* argv[]) {
         }
 
         // Get the size of the file
-        //imgSize = header[1]; // WTF ??? TODO
-        imgSize = 256;
+        imgSize = atoi(header[1].c_str()); 
 
         // Variable to store the current value when parsing the file
         int number;
@@ -88,17 +87,18 @@ int main(int argc, char* argv[]) {
         // Close the filestream
         in.close();
     }
-
+  
     // Broadcast the size of the image to every process
     MPI_Bcast((void*)&imgSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
     cout << "[Process " << myPE << "] Img size : " << imgSize << endl;
     int sizeLocal = imgSize / nbPE;
+    cout << "[Process " << myPE << "] Size local : " << sizeLocal << endl;
 
     processFFT(data, imgSize, true, true);
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    processFFT(data, imgSize, false, true);
+    //processFFT(data, imgSize, false, true);
 
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -142,6 +142,7 @@ int main(int argc, char* argv[]) {
         }
         for (int i = 0; i < data.size(); i++) {
             out << abs(real(data[i]));
+            //out << real(data[i]);
             out << "\n";
         }
         out.close();
@@ -186,10 +187,10 @@ void processFFT(vector<complex<double> > &data, int imgSize, bool isRow, bool is
             // Split the row by the number of process and send the data to them
             // Send all the parts and then process its own
             for (int k = 1; k < nbPE; k++) {
-                vector<complex<double> > dataLocal(rowOrCol.begin() + (k * sizeLocal), rowOrCol.begin() + (k * sizeLocal) + sizeLocal );
+                vector<complex<double> > dataLocal(rowOrCol.begin() + (k * sizeLocal), rowOrCol.begin() + (k * sizeLocal) + sizeLocal);
                 double* send_buf = complexToBuffer(dataLocal);
                 MPI_Send(send_buf, sizeLocal * 2, MPI_DOUBLE, k, 0, MPI_COMM_WORLD);
-                //delete send_buf;
+                delete send_buf;
             }
 
             // Process its own part
@@ -207,7 +208,6 @@ void processFFT(vector<complex<double> > &data, int imgSize, bool isRow, bool is
                     data[i * imgSize + j] = dataLocal[j];
                 }
                 else {
-                    cout << "Column " << j * imgSize + i << " -> " << dataLocal[j] << endl;
                     data[j * imgSize + i] = dataLocal[j];
                 }
             }
@@ -225,7 +225,7 @@ void processFFT(vector<complex<double> > &data, int imgSize, bool isRow, bool is
                         data[imgSize * k * sizeLocal + i + j * imgSize] = dataPartFiltered[j];
                 }
             }
-            //delete recv_buf;
+            delete recv_buf;
         }
     }
     else {
@@ -244,9 +244,9 @@ void processFFT(vector<complex<double> > &data, int imgSize, bool isRow, bool is
 
             double* send_buf = complexToBuffer(dataLocal);
             MPI_Send(send_buf, sizeLocal * 2, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
-            //delete send_buf;
+            delete send_buf;
         }
-        //delete recv_buf;
+        delete recv_buf;
     }
 }
 

@@ -9,7 +9,7 @@ EXEC=filtragePar
 
 RM=rm -f
 
-PROC=4
+PROC=64
 SEED=19
 DATA=4
 ARGS=evert.pgm 10
